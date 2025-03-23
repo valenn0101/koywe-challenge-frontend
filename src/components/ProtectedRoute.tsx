@@ -1,24 +1,27 @@
 'use client';
 
-import AuthContainer from '@/components/login/AuthContainer';
 import { useAuth } from '@/lib/providers/auth-context';
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect, ReactNode, useState } from 'react';
 
-export default function Home() {
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard');
+    if (!isAuthenticated) {
+      router.push('/');
     } else {
-      setIsLoading(false);
+      setIsChecking(false);
     }
   }, [isAuthenticated, router]);
 
-  if (isLoading) {
+  if (isChecking) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div
@@ -29,5 +32,5 @@ export default function Home() {
     );
   }
 
-  return <AuthContainer />;
+  return <>{children}</>;
 }

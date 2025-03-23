@@ -11,10 +11,14 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/lib/axios', () => ({
   __esModule: true,
   default: {
-    post: jest.fn(),
     interceptors: {
       request: {
         use: jest.fn(),
+        eject: jest.fn(),
+      },
+      response: {
+        use: jest.fn(),
+        eject: jest.fn(),
       },
     },
   },

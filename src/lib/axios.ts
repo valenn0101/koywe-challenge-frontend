@@ -10,24 +10,12 @@ const axiosInstance = axios.create({
   timeout: 10000,
 });
 
-// Interceptor para peticiones
-axiosInstance.interceptors.request.use(
-  config => {
-    // Aquí podrías agregar tokens de autenticación, etc.
-    return config;
-  },
-  error => {
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor para respuestas
 axiosInstance.interceptors.response.use(
   response => {
     return response;
   },
   error => {
-    // Manejo centralizado de errores
+    console.error('Error en la petición:', error.message);
     return Promise.reject(error);
   }
 );
