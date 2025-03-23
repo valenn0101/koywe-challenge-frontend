@@ -5,7 +5,11 @@ import LoginPresentation from './LoginPresentation';
 import { useAuthQuery } from '@/hooks/useAuthQuery';
 import { toast } from 'nextjs-toast-notify';
 
-export default function LoginContainer() {
+interface LoginContainerProps {
+  onRegisterClick: () => void;
+}
+
+export default function LoginContainer({ onRegisterClick }: LoginContainerProps) {
   const [loginRequest, setLoginRequest] = useState({
     email: '',
     password: '',
@@ -81,6 +85,7 @@ export default function LoginContainer() {
       onEmailChange={value => setLoginRequest({ ...loginRequest, email: value })}
       onPasswordChange={value => setLoginRequest({ ...loginRequest, password: value })}
       onSubmit={handleSubmit}
+      onRegisterClick={onRegisterClick}
     />
   );
 }

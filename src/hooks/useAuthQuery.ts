@@ -9,6 +9,12 @@ interface LoginCredentials {
   password: string;
 }
 
+interface RegisterCredentials {
+  name: string;
+  email: string;
+  password: string;
+}
+
 interface AuthResponse {
   accessToken: string;
   refreshToken: string;
@@ -16,6 +22,16 @@ interface AuthResponse {
     id: string;
     email: string;
     name?: string;
+  };
+}
+
+interface RegisterResponse {
+  success: boolean;
+  message?: string;
+  user?: {
+    id: string;
+    email: string;
+    name: string;
   };
 }
 
@@ -28,6 +44,10 @@ export function useAuthQuery() {
         const response = await axiosInstance.post<AuthResponse>('/auth/login', credentials);
         return response.data;
       } catch (error) {
+        toast.error(`Error al iniciar sesión: ${error}`, {
+          duration: 4000,
+          position: 'bottom-center',
+        });
         throw error;
       }
     },
@@ -69,10 +89,52 @@ export function useAuthQuery() {
     },
   });
 
+  const registerMutation = useMutation({
+    mutationFn: async (userData: RegisterCredentials): Promise<RegisterResponse> => {
+      try {
+        const response = await axiosInstance.post<RegisterResponse>('/auth/register', userData);
+        return response.data;
+      } catch (error) {
+        toast.error(`Error al registrar usuario: ${error}`, {
+          duration: 4000,
+          position: 'bottom-center',
+        });
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success('Cuenta creada exitosamente', {
+        duration: 3000,
+        position: 'bottom-center',
+      });
+    },
+    onError: (error: AxiosError<{ details: string; message: string }>) => {
+      let errorMessage = 'Error desconocido';
+
+      if (error.response) {
+        errorMessage =
+          error.response.data?.details ||
+          error.response.data?.message ||
+          `Error ${error.response.status}: ${error.response.statusText}`;
+      } else if (error.request) {
+        errorMessage = 'No se recibió respuesta del servidor';
+      } else {
+        errorMessage = error.message || 'Error de configuración de solicitud';
+      }
+
+      toast.error(`Error al registrar: ${errorMessage}`, {
+        duration: 4000,
+        position: 'bottom-center',
+      });
+    },
+  });
+
   return {
     loginMutation,
+    registerMutation,
     isAuthenticated: auth.isAuthenticated,
     isLoading: loginMutation.isPending,
+    isRegistering: registerMutation.isPending,
     user: auth.user,
     logout: auth.logout,
   };
