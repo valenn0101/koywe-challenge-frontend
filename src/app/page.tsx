@@ -1,5 +1,5 @@
-import LoginContainer from '@/components/login/LoginContainer';
+import AuthContainer from '@/components/login/AuthContainer';
 
 export default function Home() {
-  return <LoginContainer />;
+  return <AuthContainer />;
 }
