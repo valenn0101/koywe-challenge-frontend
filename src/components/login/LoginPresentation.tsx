@@ -13,6 +13,7 @@ interface LoginPresentationProps {
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
+  onRegisterClick: () => void;
 }
 
 export default function LoginPresentation({
@@ -23,6 +24,7 @@ export default function LoginPresentation({
   onEmailChange,
   onPasswordChange,
   onSubmit,
+  onRegisterClick,
 }: LoginPresentationProps) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4 sm:p-8">
@@ -80,7 +82,7 @@ export default function LoginPresentation({
           <p className="mb-2 text-sm text-gray-600">Don&apos;t have an account?</p>
           <button
             className="h-10 w-full rounded-md bg-gray-100 font-medium text-gray-800 transition-colors hover:cursor-pointer hover:bg-gray-200"
-            onClick={() => {}}
+            onClick={onRegisterClick}
           >
             Register
           </button>
