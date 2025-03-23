@@ -21,7 +21,10 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="h-16 w-16 animate-spin rounded-full border-t-2 border-b-2 border-indigo-600"></div>
+        <div
+          role="status"
+          className="h-16 w-16 animate-spin rounded-full border-t-2 border-b-2 border-indigo-600"
+        ></div>
       </div>
     );
   }
