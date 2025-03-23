@@ -32,7 +32,7 @@ export default function LoginContainer({ onRegisterClick }: LoginContainerProps)
       return 'La contraseña debe tener al menos 8 caracteres';
     }
 
-    const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+    const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
     if (!specialCharRegex.test(password)) {
       return 'La contraseña debe incluir al menos un carácter especial';
     }
