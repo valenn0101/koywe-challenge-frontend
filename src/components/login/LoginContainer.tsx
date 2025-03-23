@@ -10,12 +10,52 @@ export default function LoginContainer() {
     email: '',
     password: '',
   });
+  const [errors, setErrors] = useState({
+    email: '',
+    password: '',
+  });
 
   const { loginMutation } = useAuthQuery();
   const isLoading = loginMutation.isPending;
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string): string => {
+    if (password.length < 8) {
+      return 'La contraseña debe tener al menos 8 caracteres';
+    }
+
+    const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+    if (!specialCharRegex.test(password)) {
+      return 'La contraseña debe incluir al menos un carácter especial';
+    }
+
+    return '';
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    let isValid = true;
+    const newErrors = { email: '', password: '' };
+
+    if (!validateEmail(loginRequest.email)) {
+      newErrors.email = 'Por favor ingrese un correo electrónico válido';
+      isValid = false;
+    }
+
+    const passwordError = validatePassword(loginRequest.password);
+    if (passwordError) {
+      newErrors.password = passwordError;
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+
+    if (!isValid) return;
 
     try {
       await loginMutation.mutate(loginRequest);
@@ -37,6 +77,7 @@ export default function LoginContainer() {
       email={loginRequest.email}
       password={loginRequest.password}
       isLoading={isLoading}
+      errors={errors}
       onEmailChange={value => setLoginRequest({ ...loginRequest, email: value })}
       onPasswordChange={value => setLoginRequest({ ...loginRequest, password: value })}
       onSubmit={handleSubmit}

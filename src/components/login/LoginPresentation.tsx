@@ -6,6 +6,10 @@ interface LoginPresentationProps {
   email: string;
   password: string;
   isLoading: boolean;
+  errors: {
+    email: string;
+    password: string;
+  };
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
@@ -15,6 +19,7 @@ export default function LoginPresentation({
   email,
   password,
   isLoading,
+  errors,
   onEmailChange,
   onPasswordChange,
   onSubmit,
@@ -41,9 +46,10 @@ export default function LoginPresentation({
               type="email"
               value={email}
               onChange={e => onEmailChange(e.target.value)}
-              className="h-10 w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className={`h-10 w-full rounded-md border ${errors.email ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-black focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none`}
               required
             />
+            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
           </div>
 
           <div className="space-y-2">
@@ -55,9 +61,10 @@ export default function LoginPresentation({
               type="password"
               value={password}
               onChange={e => onPasswordChange(e.target.value)}
-              className="h-10 w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className={`h-10 w-full rounded-md border ${errors.password ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-black focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none`}
               required
             />
+            {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
           </div>
 
           <button
