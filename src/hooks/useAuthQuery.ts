@@ -24,16 +24,40 @@ export function useAuthQuery() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-      const response = await axiosInstance.post<AuthResponse>('/auth/login', credentials);
-      return response.data;
+      try {
+        const response = await axiosInstance.post<AuthResponse>('/auth/login', credentials);
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
     },
     onSuccess: data => {
-      auth.login(data.accessToken, data.refreshToken, data.user);
+      try {
+        auth.login(data.accessToken, data.refreshToken, data.user);
+        toast.success(`Bienvenido${data.user?.name ? ` ${data.user.name}` : ''}`, {
+          duration: 3000,
+          position: 'bottom-center',
+        });
+      } catch (error) {
+        toast.error(`Error al iniciar sesión: ${error}`, {
+          duration: 4000,
+          position: 'bottom-center',
+        });
+      }
     },
     onError: (error: AxiosError<{ details: string }>) => {
-      console.log(error);
+      let errorMessage = 'Error desconocido';
 
-      const errorMessage = error.response?.data?.details || 'Error desconocido';
+      if (error.response) {
+        errorMessage =
+          error.response.data?.details ||
+          `Error ${error.response.status}: ${error.response.statusText}`;
+      } else if (error.request) {
+        errorMessage = 'No se recibió respuesta del servidor';
+      } else {
+        errorMessage = error.message || 'Error de configuración de solicitud';
+      }
+
       toast.error(`Error al iniciar sesión: ${errorMessage}`, {
         duration: 4000,
         progress: false,
