@@ -4,6 +4,7 @@ import { createContext, useState, useContext, useEffect, ReactNode } from 'react
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'nextjs-toast-notify';
+import Cookies from 'js-cookie';
 
 interface User {
   id: string;
@@ -33,17 +34,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const storedAccessToken = localStorage.getItem('accessToken');
       const storedRefreshToken = localStorage.getItem('refreshToken');
+      const storedUser = localStorage.getItem('user');
 
       if (storedAccessToken) {
         setAccessToken(storedAccessToken);
         setRefreshToken(storedRefreshToken);
         setIsAuthenticated(true);
 
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+
         setupAxiosInterceptor(storedAccessToken);
       }
     } catch (error) {
-      console.error('Error al recuperar tokens:', error);
-      toast.error('Error al recuperar información de sesión', {
+      toast.error(`Error al recuperar tokens: ${error}`, {
         duration: 4000,
         position: 'bottom-center',
       });
@@ -66,8 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       );
     } catch (error) {
-      console.error('Error al configurar interceptor:', error);
-      toast.error('Error al configurar el cliente HTTP', {
+      toast.error(`Error al configurar interceptor: ${error}`, {
         duration: 4000,
         position: 'bottom-center',
       });
@@ -79,24 +83,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('accessToken', newAccessToken);
       localStorage.setItem('refreshToken', newRefreshToken);
 
-      setAccessToken(newAccessToken);
-      setRefreshToken(newRefreshToken);
-      setIsAuthenticated(true);
+      Cookies.set('accessToken', newAccessToken, { expires: 7 });
+
       if (userData) {
+        localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
       }
 
-      setupAxiosInterceptor(newAccessToken);
+      setAccessToken(newAccessToken);
+      setRefreshToken(newRefreshToken);
+      setIsAuthenticated(true);
 
-      toast.success('Sesión iniciada correctamente', {
-        duration: 3000,
-        position: 'bottom-center',
-      });
+      setupAxiosInterceptor(newAccessToken);
 
       router.push('/dashboard');
     } catch (error) {
-      console.error('Error en el proceso de login:', error);
-      toast.error('Error al iniciar sesión', {
+      toast.error(`Error al iniciar sesión: ${error}`, {
         duration: 4000,
         position: 'bottom-center',
       });
@@ -107,6 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+
+      Cookies.remove('accessToken');
 
       setAccessToken(null);
       setRefreshToken(null);
@@ -120,8 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       router.push('/');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      toast.error('Error al cerrar sesión', {
+      toast.error(`Error al cerrar sesión: ${error}`, {
         duration: 4000,
         position: 'bottom-center',
       });
