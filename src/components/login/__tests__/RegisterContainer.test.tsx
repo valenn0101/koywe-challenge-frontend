@@ -1,6 +1,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import RegisterContainer from '../RegisterContainer';
 import { useAuthQuery } from '@/hooks/useAuthQuery';
+import { toast } from 'nextjs-toast-notify';
+
+jest.mock('nextjs-toast-notify', () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+    warning: jest.fn(),
+  },
+}));
 
 jest.mock('@/hooks/useAuthQuery', () => ({
   useAuthQuery: jest.fn(),
@@ -23,6 +33,7 @@ describe('RegisterContainer', () => {
     jest.clearAllMocks();
     (useAuthQuery as jest.Mock).mockReturnValue({
       registerMutation: {
+        mutate: mockMutateAsync,
         mutateAsync: mockMutateAsync,
         isPending: false,
       },
@@ -208,6 +219,7 @@ describe('RegisterContainer', () => {
   it('should show "Loading..." when isPending is true', () => {
     (useAuthQuery as jest.Mock).mockReturnValue({
       registerMutation: {
+        mutate: mockMutateAsync,
         mutateAsync: mockMutateAsync,
         isPending: true,
       },
@@ -241,7 +253,7 @@ describe('RegisterContainer', () => {
     }
 
     await waitFor(() => {
-      expect(console.error).toHaveBeenCalled();
+      expect(toast.error).toHaveBeenCalled();
       expect(mockOnSwitchToLogin).not.toHaveBeenCalled();
     });
   });
