@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUserQuotes } from '@/hooks/useUserQuotes';
 import { FaExchangeAlt, FaClock } from 'react-icons/fa';
+import { useUserQuotes } from '@/hooks/useCurrencies';
 
 export default function UserQuotes() {
   const { data: quotes = [], isLoading, isError } = useUserQuotes();
