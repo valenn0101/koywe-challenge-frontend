@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaExchangeAlt, FaClock } from 'react-icons/fa';
-import { useUserQuotes } from '@/hooks/useCurrencies';
+import { FaExchangeAlt, FaClock, FaTrash } from 'react-icons/fa';
+import { useUserQuotes, useDeleteQuote } from '@/hooks/useCurrencies';
 
 export default function UserQuotes() {
   const { data: quotes = [], isLoading, isError } = useUserQuotes();
+  const deleteQuote = useDeleteQuote();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -115,8 +116,17 @@ export default function UserQuotes() {
                 </div>
               </div>
 
-              <div className="pt-1 text-xs text-gray-500">
-                Creado: {new Date(quote.createdAt).toLocaleString()}
+              <div className="flex items-center justify-between pt-1">
+                <div className="text-xs text-gray-500">
+                  Creado: {new Date(quote.createdAt).toLocaleString()}
+                </div>
+                <button
+                  onClick={() => deleteQuote.mutate(String(quote.id))}
+                  disabled={deleteQuote.isPending}
+                  className="rounded-full p-1 text-red-500 hover:bg-red-50 disabled:opacity-50"
+                >
+                  <FaTrash className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
