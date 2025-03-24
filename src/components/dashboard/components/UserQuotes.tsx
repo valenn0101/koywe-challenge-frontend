@@ -128,7 +128,7 @@ export default function UserQuotes() {
                   <button
                     onClick={() => reloadQuote.mutate(String(quote.id))}
                     disabled={reloadQuote.isPending || isQuoteExpired(quote.expiresAt)}
-                    className={`rounded-full p-1 hover:cursor-pointer ${
+                    className={`cursor-pointer rounded-full p-1 ${
                       isQuoteExpired(quote.expiresAt)
                         ? 'cursor-not-allowed text-gray-400 opacity-50'
                         : 'text-indigo-500 hover:bg-indigo-50 disabled:opacity-50'
@@ -138,6 +138,7 @@ export default function UserQuotes() {
                         ? 'No se puede recargar una cotización expirada'
                         : 'Recargar cotización'
                     }
+                    data-testid="reload-quote-btn"
                   >
                     <FaSync
                       className={`h-4 w-4 ${reloadQuote.isPending && !isQuoteExpired(quote.expiresAt) ? 'animate-spin' : ''}`}
@@ -147,6 +148,7 @@ export default function UserQuotes() {
                     onClick={() => deleteQuote.mutate(String(quote.id))}
                     disabled={deleteQuote.isPending}
                     className="rounded-full p-1 text-red-500 hover:cursor-pointer hover:bg-red-50 disabled:opacity-50"
+                    data-testid="delete-quote-btn"
                   >
                     <FaTrash className="h-4 w-4" />
                   </button>
