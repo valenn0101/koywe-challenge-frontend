@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaExchangeAlt, FaClock, FaTrash } from 'react-icons/fa';
-import { useUserQuotes, useDeleteQuote } from '@/hooks/useCurrencies';
-
+import { FaExchangeAlt, FaClock, FaTrash, FaSync } from 'react-icons/fa';
+import { useUserQuotes, useDeleteQuote, useReloadQuote } from '@/hooks/useCurrencies';
+import { Quote } from '@/types/quote';
 export default function UserQuotes() {
   const { data: quotes = [], isLoading, isError } = useUserQuotes();
   const deleteQuote = useDeleteQuote();
+  const reloadQuote = useReloadQuote();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -70,7 +71,7 @@ export default function UserQuotes() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {quotes.map(quote => (
+        {quotes.map((quote: Quote) => (
           <div
             key={quote.id}
             className={`rounded-lg border p-4 ${
@@ -123,13 +124,35 @@ export default function UserQuotes() {
                 <div className="text-xs text-gray-500">
                   Creado: {new Date(quote.createdAt).toLocaleString()}
                 </div>
-                <button
-                  onClick={() => deleteQuote.mutate(String(quote.id))}
-                  disabled={deleteQuote.isPending}
-                  className="rounded-full p-1 text-red-500 hover:bg-red-50 disabled:opacity-50"
-                >
-                  <FaTrash className="h-4 w-4" />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => reloadQuote.mutate(String(quote.id))}
+                    disabled={reloadQuote.isPending || isQuoteExpired(quote.expiresAt)}
+                    className={`cursor-pointer rounded-full p-1 ${
+                      isQuoteExpired(quote.expiresAt)
+                        ? 'cursor-not-allowed text-gray-400 opacity-50'
+                        : 'text-indigo-500 hover:bg-indigo-50 disabled:opacity-50'
+                    }`}
+                    title={
+                      isQuoteExpired(quote.expiresAt)
+                        ? 'No se puede recargar una cotización expirada'
+                        : 'Recargar cotización'
+                    }
+                    data-testid="reload-quote-btn"
+                  >
+                    <FaSync
+                      className={`h-4 w-4 ${reloadQuote.isPending && !isQuoteExpired(quote.expiresAt) ? 'animate-spin' : ''}`}
+                    />
+                  </button>
+                  <button
+                    onClick={() => deleteQuote.mutate(String(quote.id))}
+                    disabled={deleteQuote.isPending}
+                    className="rounded-full p-1 text-red-500 hover:cursor-pointer hover:bg-red-50 disabled:opacity-50"
+                    data-testid="delete-quote-btn"
+                  >
+                    <FaTrash className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

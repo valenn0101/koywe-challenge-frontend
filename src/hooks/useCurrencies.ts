@@ -3,6 +3,7 @@ import axiosInstance from '@/lib/axios';
 import { useAuth } from '@/lib/providers/auth-context';
 import { CreateQuoteRequest, Quote } from '@/types/quote';
 import { toast } from 'nextjs-toast-notify';
+import axios from 'axios';
 
 export function useCurrencies() {
   return useQuery({
@@ -87,6 +88,53 @@ export function useDeleteQuote() {
     },
     onError: error => {
       toast.error(`Error al eliminar la cotización: ${error}`);
+    },
+  });
+}
+
+export function useReloadQuote() {
+  const { accessToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (quoteId: string) => {
+      if (!accessToken) {
+        throw new Error('No hay token de acceso disponible');
+      }
+
+      try {
+        const response = await axiosInstance.get<Quote>(`/quote/${quoteId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        return response.data;
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          throw new Error('404: Cotización no encontrada o expirada');
+        }
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userQuotes'] });
+      toast.success('Cotización actualizada correctamente', {
+        position: 'bottom-center',
+        duration: 3000,
+      });
+    },
+    onError: (error: Error) => {
+      if (error.message && error.message.includes('404')) {
+        toast.error('La cotización ha expirado y no está disponible', {
+          position: 'bottom-center',
+          duration: 5000,
+        });
+      } else {
+        toast.error(`Error al recargar la cotización: ${error.message}`, {
+          position: 'bottom-center',
+          duration: 5000,
+        });
+      }
     },
   });
 }
