@@ -1,100 +1,80 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import DashboardPresentation from '../DashboardPresentation';
 
-// Mock react-icons para que no cause problemas en los tests
-jest.mock('react-icons/fa', () => ({
-  FaCoins: () => <div data-testid="fa-coins">FaCoins</div>,
-  FaUser: () => <div data-testid="fa-user">FaUser</div>,
-  FaBitcoin: () => <div data-testid="fa-bitcoin">FaBitcoin</div>,
-  FaEthereum: () => <div data-testid="fa-ethereum">FaEthereum</div>,
-  FaDollarSign: () => <div data-testid="fa-dollar-sign">FaDollarSign</div>,
-  FaMoneyBillWave: () => <div data-testid="fa-money-bill-wave">FaMoneyBillWave</div>,
-  FaArrowRight: () => <div data-testid="fa-arrow-right">FaArrowRight</div>,
-  FaDog: () => <div data-testid="fa-dog">FaDog</div>,
-  FaChevronDown: () => <div data-testid="fa-chevron-down">FaChevronDown</div>,
-  FaChevronUp: () => <div data-testid="fa-chevron-up">FaChevronUp</div>,
-}));
+jest.mock('../components/WelcomeCard', () => {
+  return function MockWelcomeCard({ userName }: { userName?: string }) {
+    return <div data-testid="welcome-card">Welcome {userName}</div>;
+  };
+});
 
-jest.mock('react-icons/si', () => ({
-  SiDogecoin: () => <div data-testid="si-dogecoin">SiDogecoin</div>,
-  SiStellar: () => <div data-testid="si-stellar">SiStellar</div>,
-}));
+jest.mock('../components/CurrenciesList', () => {
+  return function MockCurrenciesList({
+    currencies,
+    isLoading,
+  }: {
+    currencies: string[];
+    isLoading: boolean;
+  }) {
+    return (
+      <div data-testid="currencies-list">
+        Currencies List: {currencies.join(', ')}
+        {isLoading && <span>Loading...</span>}
+      </div>
+    );
+  };
+});
 
-jest.mock('react-icons/gi', () => ({
-  GiCrystalGrowth: () => <div data-testid="gi-crystal-growth">GiCrystalGrowth</div>,
-}));
+jest.mock('../components/CreateQuoteForm', () => {
+  return function MockCreateQuoteForm({ currencies }: { currencies: string[] }) {
+    return <div data-testid="create-quote-form">Create Quote Form: {currencies.join(', ')}</div>;
+  };
+});
 
 describe('DashboardPresentation', () => {
-  const defaultProps = {
-    userName: '',
-    currencies: ['BTC', 'ETH', 'USDT'],
-    isLoading: false,
-  };
+  it('should render all components when data is loaded', () => {
+    render(
+      <DashboardPresentation
+        userName="John Doe"
+        currencies={['BTC', 'ETH', 'ARS']}
+        isLoading={false}
+      />
+    );
 
-  it('should render the dashboard with the user name', () => {
-    render(<DashboardPresentation {...defaultProps} userName="Juan" />);
+    expect(screen.getByTestId('welcome-card')).toBeInTheDocument();
+    expect(screen.getByTestId('create-quote-form')).toBeInTheDocument();
+    expect(screen.getByTestId('currencies-list')).toBeInTheDocument();
 
-    expect(screen.getByText('¡Bienvenido, Juan!')).toBeInTheDocument();
+    expect(screen.getByTestId('welcome-card')).toHaveTextContent('Welcome John Doe');
+    expect(screen.getByTestId('create-quote-form')).toHaveTextContent(
+      'Create Quote Form: BTC, ETH, ARS'
+    );
+    expect(screen.getByTestId('currencies-list')).toHaveTextContent(
+      'Currencies List: BTC, ETH, ARS'
+    );
   });
 
-  it('should show a loading spinner when isLoading is true', () => {
-    render(<DashboardPresentation {...defaultProps} isLoading={true} />);
+  it('should not show create quote form when loading', () => {
+    render(<DashboardPresentation userName="John Doe" currencies={[]} isLoading={true} />);
 
-    expect(screen.getByTestId('fa-chevron-up')).toBeInTheDocument();
-    expect(screen.queryByText('BTC')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Monedas Disponibles' })).toBeInTheDocument();
-
-    const spinner = document.querySelector('.animate-spin');
-    expect(spinner).toBeInTheDocument();
+    expect(screen.getByTestId('welcome-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('create-quote-form')).not.toBeInTheDocument();
+    expect(screen.getByTestId('currencies-list')).toHaveTextContent('Loading');
   });
 
-  it('should show the currencies correctly', () => {
-    render(<DashboardPresentation {...defaultProps} />);
+  it('should not show create quote form when currencies are empty', () => {
+    render(<DashboardPresentation userName="John Doe" currencies={[]} isLoading={false} />);
 
-    expect(screen.getByText('BTC')).toBeInTheDocument();
-    expect(screen.getByText('ETH')).toBeInTheDocument();
-    expect(screen.getByText('USDT')).toBeInTheDocument();
-
-    expect(screen.getByText('Bitcoin')).toBeInTheDocument();
-    expect(screen.getByText('Ethereum')).toBeInTheDocument();
-    expect(screen.getByText('Tether')).toBeInTheDocument();
+    expect(screen.getByTestId('welcome-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('create-quote-form')).not.toBeInTheDocument();
+    expect(screen.getByTestId('currencies-list')).toBeInTheDocument();
   });
 
-  it('should be able to fold and unfold the currencies section', () => {
-    render(<DashboardPresentation {...defaultProps} />);
+  it('should render with undefined userName', () => {
+    render(<DashboardPresentation currencies={['BTC', 'ETH', 'ARS']} isLoading={false} />);
 
-    expect(screen.getByTestId('fa-chevron-up')).toBeInTheDocument();
-    expect(screen.getByText('BTC')).toBeInTheDocument();
-
-    const header = screen.getByRole('heading', { name: 'Monedas Disponibles' }).parentElement
-      ?.parentElement;
-    if (header) {
-      fireEvent.click(header);
-    }
-
-    expect(screen.getByTestId('fa-chevron-down')).toBeInTheDocument();
-    expect(screen.queryByText('BTC')).not.toBeInTheDocument();
-
-    if (header) {
-      fireEvent.click(header);
-    }
-
-    expect(screen.getByTestId('fa-chevron-up')).toBeInTheDocument();
-    expect(screen.getByText('BTC')).toBeInTheDocument();
-  });
-
-  it('should show different icons for different currencies', () => {
-    const currencies = ['BTC', 'ETH', 'USDT', 'XEM', 'DOGE', 'SHIB', 'XLM', 'ARS', 'CLP'];
-    render(<DashboardPresentation {...defaultProps} currencies={currencies} />);
-
-    expect(screen.getByText('BTC')).toBeInTheDocument();
-    expect(screen.getByText('ETH')).toBeInTheDocument();
-    expect(screen.getByText('USDT')).toBeInTheDocument();
-    expect(screen.getByText('XEM')).toBeInTheDocument();
-    expect(screen.getByText('DOGE')).toBeInTheDocument();
-    expect(screen.getByText('SHIB')).toBeInTheDocument();
-    expect(screen.getByText('XLM')).toBeInTheDocument();
-    expect(screen.getByText('ARS')).toBeInTheDocument();
-    expect(screen.getByText('CLP')).toBeInTheDocument();
+    expect(screen.getByTestId('welcome-card')).toHaveTextContent('Welcome');
+    expect(screen.getByTestId('create-quote-form')).toBeInTheDocument();
+    expect(screen.getByTestId('currencies-list')).toBeInTheDocument();
   });
 });

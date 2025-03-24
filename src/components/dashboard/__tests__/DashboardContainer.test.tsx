@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import DashboardContainer from '../DashboardContainer';
 import { useAuth } from '@/lib/providers/auth-context';
 import { useCurrencies } from '@/hooks/useCurrencies';
@@ -11,55 +12,51 @@ jest.mock('@/hooks/useCurrencies', () => ({
   useCurrencies: jest.fn(),
 }));
 
+interface MockDashboardPresentationProps {
+  userName?: string;
+  currencies: string[];
+  isLoading: boolean;
+}
+
+jest.mock('../DashboardPresentation', () => {
+  return function MockDashboardPresentation(props: MockDashboardPresentationProps) {
+    return (
+      <div data-testid="dashboard-presentation">
+        <div data-testid="user-name">{props.userName}</div>
+        <div data-testid="currencies">{props.currencies.join(', ')}</div>
+        <div data-testid="is-loading">{props.isLoading.toString()}</div>
+      </div>
+    );
+  };
+});
+
 describe('DashboardContainer', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should pass user data to presentation component', () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { name: 'John Doe', id: '1', email: 'john@example.com' },
+    });
+
+    (useCurrencies as jest.Mock).mockReturnValue({
+      data: ['BTC', 'ETH', 'ARS'],
+      isLoading: false,
+    });
+
+    render(<DashboardContainer />);
+
+    expect(screen.getByTestId('user-name')).toHaveTextContent('John Doe');
+    expect(screen.getByTestId('currencies')).toHaveTextContent('BTC, ETH, ARS');
+    expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
+  });
+
+  it('should handle loading state', () => {
     (useAuth as jest.Mock).mockReturnValue({
       user: null,
     });
 
-    (useCurrencies as jest.Mock).mockReturnValue({
-      data: [],
-      isLoading: false,
-    });
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should render the DashboardPresentation component with the correct props when there is no user', () => {
-    render(<DashboardContainer />);
-
-    expect(screen.getByText('¡Bienvenido!')).toBeInTheDocument();
-  });
-
-  it('should pass the user name to the presentation component', () => {
-    (useAuth as jest.Mock).mockReturnValue({
-      user: {
-        id: '123',
-        email: 'usuario@ejemplo.com',
-        name: 'Pedro',
-      },
-    });
-
-    render(<DashboardContainer />);
-
-    expect(screen.getByText('¡Bienvenido, Pedro!')).toBeInTheDocument();
-  });
-
-  it('should pass the currencies to the presentation component', () => {
-    (useCurrencies as jest.Mock).mockReturnValue({
-      data: ['BTC', 'ETH'],
-      isLoading: false,
-    });
-
-    render(<DashboardContainer />);
-
-    expect(screen.getByText('BTC')).toBeInTheDocument();
-    expect(screen.getByText('ETH')).toBeInTheDocument();
-  });
-
-  it('should pass isLoading=true to the presentation component when the data is loading', () => {
     (useCurrencies as jest.Mock).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -67,11 +64,33 @@ describe('DashboardContainer', () => {
 
     render(<DashboardContainer />);
 
-    const spinner = document.querySelector('.animate-spin');
-    expect(spinner).toBeInTheDocument();
+    expect(screen.getByTestId('user-name')).toBeEmptyDOMElement();
+    expect(screen.getByTestId('currencies')).toHaveTextContent('');
+    expect(screen.getByTestId('is-loading')).toHaveTextContent('true');
   });
 
-  it('should pass an empty array when data is undefined', () => {
+  it('should handle empty currencies', () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { name: 'John Doe', id: '1', email: 'john@example.com' },
+    });
+
+    (useCurrencies as jest.Mock).mockReturnValue({
+      data: [],
+      isLoading: false,
+    });
+
+    render(<DashboardContainer />);
+
+    expect(screen.getByTestId('user-name')).toHaveTextContent('John Doe');
+    expect(screen.getByTestId('currencies')).toHaveTextContent('');
+    expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
+  });
+
+  it('should provide undefined data with fallback to empty array', () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { name: 'John Doe', id: '1', email: 'john@example.com' },
+    });
+
     (useCurrencies as jest.Mock).mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -79,7 +98,6 @@ describe('DashboardContainer', () => {
 
     render(<DashboardContainer />);
 
-    expect(screen.queryByText('BTC')).not.toBeInTheDocument();
-    expect(screen.queryByText('ETH')).not.toBeInTheDocument();
+    expect(screen.getByTestId('currencies')).toHaveTextContent('');
   });
 });
