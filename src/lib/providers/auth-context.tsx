@@ -6,6 +6,7 @@ import axiosInstance from '@/lib/axios';
 import { toast } from 'nextjs-toast-notify';
 import Cookies from 'js-cookie';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface User {
   id: string;
@@ -31,12 +32,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Flag para prevenir múltiples refreshes simultáneos
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
@@ -223,6 +224,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRefreshToken(null);
       setIsAuthenticated(false);
       setUser(null);
+
+      queryClient.clear();
 
       toast.success('Sesión cerrada correctamente', {
         duration: 3000,
