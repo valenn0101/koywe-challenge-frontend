@@ -1,12 +1,14 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { useCurrencies, useCreateQuote } from '../useCurrencies';
+import { useCurrencies, useCreateQuote, useDeleteQuote } from '../useCurrencies';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axiosInstance from '@/lib/axios';
 import { useAuth } from '@/lib/providers/auth-context';
+import { toast } from 'nextjs-toast-notify';
 
 jest.mock('@/lib/axios', () => ({
   get: jest.fn(),
   post: jest.fn(),
+  delete: jest.fn(),
   defaults: {
     headers: {
       common: {},
@@ -16,6 +18,13 @@ jest.mock('@/lib/axios', () => ({
 
 jest.mock('@/lib/providers/auth-context', () => ({
   useAuth: jest.fn(),
+}));
+
+jest.mock('nextjs-toast-notify', () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+  },
 }));
 
 const queryClient = new QueryClient({
@@ -157,5 +166,71 @@ describe('useCreateQuote', () => {
     });
 
     expect(axiosInstance.defaults.headers.common['Authorization']).toBe(`Bearer ${mockToken}`);
+  });
+});
+
+describe('useDeleteQuote', () => {
+  const mockToken = 'mock-token';
+  const mockQuoteId = '123';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useAuth as jest.Mock).mockReturnValue({
+      accessToken: mockToken,
+    });
+  });
+
+  it('should delete quote successfully', async () => {
+    (axiosInstance.delete as jest.Mock).mockResolvedValueOnce({ data: { success: true } });
+
+    const { result } = renderHook(() => useDeleteQuote(), { wrapper });
+
+    result.current.mutate(mockQuoteId);
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(axiosInstance.delete).toHaveBeenCalledWith(`/quote/${mockQuoteId}`, {
+      headers: {
+        Authorization: `Bearer ${mockToken}`,
+      },
+    });
+    expect(toast.success).toHaveBeenCalledWith('Cotización eliminada correctamente', {
+      position: 'bottom-center',
+      duration: 5000,
+    });
+  });
+
+  it('should handle quote deletion error', async () => {
+    const error = new Error('Failed to delete quote');
+    (axiosInstance.delete as jest.Mock).mockRejectedValueOnce(error);
+
+    const { result } = renderHook(() => useDeleteQuote(), { wrapper });
+
+    result.current.mutate(mockQuoteId);
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(result.current.error).toBeDefined();
+    expect(toast.error).toHaveBeenCalledWith(`Error al eliminar la cotización: ${error}`);
+  });
+
+  it('should handle missing token error', async () => {
+    (useAuth as jest.Mock).mockReturnValueOnce({
+      accessToken: null,
+    });
+
+    const { result } = renderHook(() => useDeleteQuote(), { wrapper });
+
+    result.current.mutate(mockQuoteId);
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(result.current.error).toEqual(new Error('No hay token de acceso disponible'));
   });
 });
