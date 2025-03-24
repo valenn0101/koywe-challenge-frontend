@@ -39,7 +39,3 @@ Before pushing to the remote repository, the pre-push hook runs:
 - All tests
 
 This prevents pushing code that could break the build or introduce regressions.
-
-## Continuous Integration
-
-The same tests run during the CI process to ensure code quality is maintained across all pull requests and merges to the main branch.
