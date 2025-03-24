@@ -31,6 +31,12 @@ jest.mock('../components/CreateQuoteForm', () => {
   };
 });
 
+jest.mock('../components/UserQuotes', () => {
+  return function MockUserQuotes() {
+    return <div data-testid="user-quotes">User Quotes</div>;
+  };
+});
+
 describe('DashboardPresentation', () => {
   it('should render all components when data is loaded', () => {
     render(
@@ -44,6 +50,7 @@ describe('DashboardPresentation', () => {
     expect(screen.getByTestId('welcome-card')).toBeInTheDocument();
     expect(screen.getByTestId('create-quote-form')).toBeInTheDocument();
     expect(screen.getByTestId('currencies-list')).toBeInTheDocument();
+    expect(screen.getByTestId('user-quotes')).toBeInTheDocument();
 
     expect(screen.getByTestId('welcome-card')).toHaveTextContent('Welcome John Doe');
     expect(screen.getByTestId('create-quote-form')).toHaveTextContent(
@@ -60,6 +67,7 @@ describe('DashboardPresentation', () => {
     expect(screen.getByTestId('welcome-card')).toBeInTheDocument();
     expect(screen.queryByTestId('create-quote-form')).not.toBeInTheDocument();
     expect(screen.getByTestId('currencies-list')).toHaveTextContent('Loading');
+    expect(screen.getByTestId('user-quotes')).toBeInTheDocument();
   });
 
   it('should not show create quote form when currencies are empty', () => {
@@ -68,6 +76,7 @@ describe('DashboardPresentation', () => {
     expect(screen.getByTestId('welcome-card')).toBeInTheDocument();
     expect(screen.queryByTestId('create-quote-form')).not.toBeInTheDocument();
     expect(screen.getByTestId('currencies-list')).toBeInTheDocument();
+    expect(screen.getByTestId('user-quotes')).toBeInTheDocument();
   });
 
   it('should render with undefined userName', () => {
@@ -76,5 +85,6 @@ describe('DashboardPresentation', () => {
     expect(screen.getByTestId('welcome-card')).toHaveTextContent('Welcome');
     expect(screen.getByTestId('create-quote-form')).toBeInTheDocument();
     expect(screen.getByTestId('currencies-list')).toBeInTheDocument();
+    expect(screen.getByTestId('user-quotes')).toBeInTheDocument();
   });
 });

@@ -15,6 +15,10 @@ describe('CurrenciesList', () => {
     render(<CurrenciesList currencies={mockCurrencies} isLoading={false} />);
 
     expect(screen.getByText('Monedas Disponibles')).toBeInTheDocument();
+
+    const header = screen.getByText('Monedas Disponibles').closest('div');
+    fireEvent.click(header as HTMLElement);
+
     expect(screen.getByTestId('currency-card-BTC')).toBeInTheDocument();
     expect(screen.getByTestId('currency-card-ETH')).toBeInTheDocument();
     expect(screen.getByTestId('currency-card-ARS')).toBeInTheDocument();
@@ -24,6 +28,10 @@ describe('CurrenciesList', () => {
     render(<CurrenciesList currencies={mockCurrencies} isLoading={true} />);
 
     expect(screen.getByText('Monedas Disponibles')).toBeInTheDocument();
+
+    const header = screen.getByText('Monedas Disponibles').closest('div');
+    fireEvent.click(header as HTMLElement);
+
     const spinner = document.querySelector('.animate-spin');
     expect(spinner).toBeInTheDocument();
     expect(screen.queryByTestId('currency-card-BTC')).not.toBeInTheDocument();
@@ -34,14 +42,13 @@ describe('CurrenciesList', () => {
 
     const header = screen.getByText('Monedas Disponibles').closest('div');
 
+    fireEvent.click(header as HTMLElement);
     expect(screen.getByTestId('currency-card-BTC')).toBeInTheDocument();
 
     fireEvent.click(header as HTMLElement);
-
     expect(screen.queryByTestId('currency-card-BTC')).not.toBeInTheDocument();
 
     fireEvent.click(header as HTMLElement);
-
     expect(screen.getByTestId('currency-card-BTC')).toBeInTheDocument();
   });
 
@@ -49,6 +56,10 @@ describe('CurrenciesList', () => {
     render(<CurrenciesList currencies={[]} isLoading={false} />);
 
     expect(screen.getByText('Monedas Disponibles')).toBeInTheDocument();
+
+    const header = screen.getByText('Monedas Disponibles').closest('div');
+    fireEvent.click(header as HTMLElement);
+
     expect(screen.queryByTestId(/currency-card/)).not.toBeInTheDocument();
   });
 });

@@ -23,7 +23,7 @@ export default function Navbar() {
               </div>
               <button
                 onClick={logout}
-                className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-white transition hover:bg-indigo-700"
+                className="flex cursor-pointer items-center rounded-md bg-red-600 px-4 py-2 text-white transition hover:bg-red-700"
               >
                 <FaSignOutAlt className="mr-2" />
                 Cerrar Sesión
@@ -32,7 +32,7 @@ export default function Navbar() {
           ) : (
             <Link
               href="/"
-              className="rounded-md bg-indigo-600 px-4 py-2 text-white transition hover:bg-indigo-700"
+              className="flex cursor-pointer items-center rounded-md bg-indigo-600 px-4 py-2 text-white transition hover:bg-indigo-700"
             >
               Iniciar Sesión
             </Link>

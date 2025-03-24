@@ -1,22 +1,8 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axiosInstance from '@/lib/axios';
 import { useAuth } from '@/lib/providers/auth-context';
-
-interface CreateQuoteRequest {
-  amount: number;
-  from: string;
-  to: string;
-}
-
-interface Quote {
-  id: string;
-  amount: number;
-  from: string;
-  to: string;
-  exchangeRate: number;
-  result: number;
-  timestamp: string;
-}
+import { CreateQuoteRequest, Quote } from '@/types/quote';
+import { toast } from 'nextjs-toast-notify';
 
 export function useCurrencies() {
   return useQuery({
@@ -30,6 +16,7 @@ export function useCurrencies() {
 
 export function useCreateQuote() {
   const { accessToken } = useAuth();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (quoteData: CreateQuoteRequest) => {
@@ -44,6 +31,62 @@ export function useCreateQuote() {
         },
       });
       return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userQuotes'] });
+    },
+  });
+}
+
+export function useUserQuotes() {
+  const { accessToken } = useAuth();
+
+  return useQuery({
+    queryKey: ['userQuotes'],
+    queryFn: async () => {
+      if (!accessToken) {
+        throw new Error('No hay token de acceso disponible');
+      }
+
+      const response = await axiosInstance.get<Quote[]>('/quote/user/all', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      return response.data;
+    },
+    refetchInterval: 30000,
+    staleTime: 1000 * 60,
+  });
+}
+
+export function useDeleteQuote() {
+  const { accessToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (quoteId: string) => {
+      if (!accessToken) {
+        throw new Error('No hay token de acceso disponible');
+      }
+
+      const response = await axiosInstance.delete(`/quote/${quoteId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userQuotes'] });
+      toast.success('Cotización eliminada correctamente', {
+        position: 'bottom-center',
+        duration: 5000,
+      });
+    },
+    onError: error => {
+      toast.error(`Error al eliminar la cotización: ${error}`);
     },
   });
 }

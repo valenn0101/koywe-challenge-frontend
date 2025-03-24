@@ -10,14 +10,14 @@ interface CurrenciesListProps {
 }
 
 export default function CurrenciesList({ currencies, isLoading }: CurrenciesListProps) {
-  const [isCurrenciesVisible, setIsCurrenciesVisible] = useState(true);
+  const [isCurrenciesVisible, setIsCurrenciesVisible] = useState(false);
 
   const toggleCurrenciesVisibility = () => {
     setIsCurrenciesVisible(!isCurrenciesVisible);
   };
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow-lg">
+    <div className="mb-3 rounded-lg bg-white p-6 shadow-lg">
       <div
         className="mb-6 flex cursor-pointer items-center justify-between"
         onClick={toggleCurrenciesVisibility}

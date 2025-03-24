@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { setupAuthInterceptors } from './interceptors/auth-interceptor';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jsonplaceholder.typicode.com';
 
@@ -9,6 +10,8 @@ const axiosInstance = axios.create({
   },
   timeout: 10000,
 });
+
+setupAuthInterceptors(axiosInstance);
 
 axiosInstance.interceptors.response.use(
   response => {
