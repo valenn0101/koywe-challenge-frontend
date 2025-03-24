@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'nextjs-toast-notify';
 import Cookies from 'js-cookie';
 import { useQueryClient } from '@tanstack/react-query';
+import axiosInstance from '@/lib/axios';
 
 interface User {
   id: string;
@@ -30,6 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [requestInterceptor, setRequestInterceptor] = useState<number | null>(null);
+  const [responseInterceptor, setResponseInterceptor] = useState<number | null>(null);
 
   useEffect(() => {
     try {
@@ -45,6 +48,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (storedUser) {
           setUser(JSON.parse(storedUser));
         }
+
+        const reqInterceptor = axiosInstance.interceptors.request.use(
+          config => {
+            if (storedAccessToken) {
+              config.headers.Authorization = `Bearer ${storedAccessToken}`;
+            }
+            return config;
+          },
+          error => Promise.reject(error)
+        );
+
+        const resInterceptor = axiosInstance.interceptors.response.use(
+          response => response,
+          async error => {
+            return Promise.reject(error);
+          }
+        );
+
+        setRequestInterceptor(reqInterceptor);
+        setResponseInterceptor(resInterceptor);
       }
     } catch (error) {
       toast.error(`Error al recuperar tokens: ${error}`, {
@@ -52,6 +75,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         position: 'bottom-center',
       });
     }
+
+    return () => {
+      if (requestInterceptor !== null) {
+        axiosInstance.interceptors.request.eject(requestInterceptor);
+      }
+      if (responseInterceptor !== null) {
+        axiosInstance.interceptors.response.eject(responseInterceptor);
+      }
+    };
   }, []);
 
   const login = (newAccessToken: string, newRefreshToken: string, userData?: User) => {
