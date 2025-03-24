@@ -1,8 +1,10 @@
 import { render, act, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { AuthProvider, useAuth } from '../auth-context';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import axiosInstance from '@/lib/axios';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 jest.mock('axios');
 jest.mock('@/lib/axios', () => ({
@@ -50,6 +52,16 @@ function TestComponent() {
   );
 }
 
+const queryClient = new QueryClient();
+
+function renderWithProviders(ui: React.ReactElement) {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{ui}</AuthProvider>
+    </QueryClientProvider>
+  );
+}
+
 describe('RefreshToken Functionality', () => {
   const mockPush = jest.fn();
   const mockRefreshResponse = {
@@ -79,11 +91,7 @@ describe('RefreshToken Functionality', () => {
     localStorage.setItem('accessToken', 'old-access-token');
     localStorage.setItem('refreshToken', 'old-refresh-token');
 
-    const { getByTestId } = render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
+    const { getByTestId } = renderWithProviders(<TestComponent />);
 
     expect(getByTestId('auth-status').textContent).toBe('true');
 
@@ -106,11 +114,7 @@ describe('RefreshToken Functionality', () => {
 
     (axios.post as jest.Mock).mockRejectedValue(new Error('Token expirado'));
 
-    const { getByTestId } = render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
+    const { getByTestId } = renderWithProviders(<TestComponent />);
 
     expect(getByTestId('auth-status').textContent).toBe('true');
 
@@ -132,11 +136,7 @@ describe('RefreshToken Functionality', () => {
     localStorage.setItem('accessToken', 'test-token');
     localStorage.setItem('refreshToken', 'test-refresh-token');
 
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
+    renderWithProviders(<TestComponent />);
 
     await waitFor(() => {
       expect(axiosInstance.interceptors.request.eject).toHaveBeenCalled();
